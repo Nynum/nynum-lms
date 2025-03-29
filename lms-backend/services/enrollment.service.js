@@ -1,24 +1,32 @@
+
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 const enroll = async (userId, courseId) => {
-  const existing = await prisma.enrollment.findFirst({
+  const exists = await prisma.enrollment.findFirst({
     where: { userId, courseId }
   });
-  if (existing) return { status: 400, data: { message: "Already enrolled" } };
 
-  const record = await prisma.enrollment.create({
+  if (exists) {
+    return { status: 400, data: { message: "Already enrolled in this course" } };
+  }
+
+  const enrollment = await prisma.enrollment.create({
     data: { userId, courseId }
   });
-  return { status: 201, data: record };
+
+  return { status: 201, data: enrollment };
 };
 
-const getEnrollmentsByUser = async (userId) => {
-  const list = await prisma.enrollment.findMany({
+const getUserEnrollments = async (userId) => {
+  const enrollments = await prisma.enrollment.findMany({
     where: { userId },
-    include: { course: true }
+    include: {
+      course: true
+    }
   });
-  return { status: 200, data: list };
+
+  return { status: 200, data: enrollments };
 };
 
-module.exports = { enroll, getEnrollmentsByUser };
+module.exports = { enroll, getUserEnrollments };
